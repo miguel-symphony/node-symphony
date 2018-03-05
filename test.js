@@ -4,8 +4,8 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const symphony = require('./node-symphony');
-var bot = symphony(require('./config.q.preview.js'));
+const symphony = require('./index.js');
+var bot = symphony(require('./config.js'));
 
 const availableCmds = Object.getOwnPropertyNames(bot).filter(function (p) {
     return typeof bot[p] == 'function' && !p.startsWith('_');

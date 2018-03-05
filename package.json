@@ -2,6 +2,10 @@
   "name": "node-symphony",
   "version": "0.0.1",
   "description": "My take on a NodeJS client for Symphony API",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miguel-symphony/node-symphony"
+  },
   "main": "index.js",
   "author": "Miguel Clark",
   "license": "ISC",
