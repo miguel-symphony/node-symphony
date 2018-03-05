@@ -1,0 +1,11 @@
+{
+  "name": "node-symphony",
+  "version": "0.0.1",
+  "description": "My take on a NodeJS client for Symphony API",
+  "main": "index.js",
+  "author": "Miguel Clark",
+  "license": "ISC",
+  "dependencies": {
+    "needle": "^2.1.0"
+  }
+}
