@@ -51,7 +51,11 @@ var symphony = {
 			return needle('post',config.endpoints.session+'/extensionApp',data,options)
 				.then((resp) => {				
 					console.log(resp.statusCode);
-					return resp.body;
+					return {
+						statusCode: resp.statusCode,
+						statusMessage: resp.statusMessage,
+						body: resp.body
+					};
 				});
 		},
 
@@ -74,17 +78,39 @@ var symphony = {
 							return symphony.authenticate().then(function(tokens) {
 								options.headers.sessionToken = tokens.sessionToken;
 								options.headers.keyManagerToken = tokens.keyManagerToken;
-								return needle(method,url,data,options); // only retry once to avoid infinite loop
+								// only retry once to avoid infinite loop
+								return needle(method,url,data,options)
+									.then(function(resp) {
+										if(resp.statusCode == 200) return resp.body;
+										else return Promise.reject({
+											statusCode: resp.statusCode,
+											statusMessage: resp.statusMessage,
+											body: resp.body
+										});
+									}); 
 							});
 						}
-						return resp;
+						if(resp.statusCode == 200) return resp.body;
+						else return Promise.reject({
+							statusCode: resp.statusCode,
+							statusMessage: resp.statusMessage,
+							body: resp.body
+						});
 					});
 			} else {
 			// otherwise simply auth first and then make call	
 				return symphony.authenticate().then(function(tokens) {
 					options.headers.sessionToken = tokens.sessionToken;
 					options.headers.keyManagerToken = tokens.keyManagerToken;
-					return needle(method,url,data,options);
+					return needle(method,url,data,options)
+						.then(function(resp) {
+							if(resp.statusCode == 200) return resp.body;
+							else return Promise.reject({
+									statusCode: resp.statusCode,
+									statusMessage: resp.statusMessage,
+									body: resp.body
+								});
+						});
 				});
 			}
 		},
@@ -100,6 +126,19 @@ var symphony = {
 		echo: function(message) {
 			var data = {message : message};
 			return symphony._apicall('post',config.endpoints.agent + '/v1/util/echo',data);
+		},
+
+		userLookup: function(type,lookup,local) {
+			if(!local) local = false;
+			query = `${type}=${lookup}&local=${local}`;
+			return symphony._apicall('get',config.endpoints.pod + `/v2/user?${query}`);
+		},
+
+		userLookupv3: function(type,lookup,local) {
+			if(!local) local = false;
+			if(lookup && Array.isArray(lookup)) lookup = lookup.join();
+			query = `${type}=${lookup}&local=${local}`;
+			return symphony._apicall('get',config.endpoints.pod + `/v3/users?${query}`);
 		},
 
 		userstreams: function(data) {
@@ -137,10 +176,18 @@ var symphony = {
 			return symphony._apicall('post',config.endpoints.agent + `/v4/stream/${sid}/message/create`,{message : `<messageML>${message}</messageML>`});
 		},
 
-		acceptconnection: function(userId) {
+		listConnections: function(status,userIds) {
+			if(!status) status = 'all';
+			if(!userIds) userIds = [];
+			if(userIds && Array.isArray(userIds)) userIds = userIds.join();
+			return symphony._apicall('get',config.endpoints.pod + `/v1/connection/list?status=${status}&userIds=${userIds}`);
+		},
+		acceptConnection: function(userId) {
 			return symphony._apicall('post',config.endpoints.pod + `/v1/connection/accept`,{userId : userId});
-		}
-
+		},
+		connection: function(userId) {
+			return symphony._apicall('get',config.endpoints.pod + `/v1/connection/user/${userId}/info`);
+		},
 	}
 
 module.exports = function (_config) {
