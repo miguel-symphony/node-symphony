@@ -14,7 +14,13 @@ const availableCmds = Object.getOwnPropertyNames(bot).filter(function (p) {
 getUserInput('What do you want to do?\n');
 
 function getUserInput(question) {
-    rl.question(question, async function(cmd) {
+    rl.question(question, async function(question) {
+
+        // split question by space
+        var cmdList = question.split(/[ ]+/);
+        
+        var cmd = cmdList[0] || 'help';
+
         if (cmd == "exit"){
             rl.close();
         } else if(cmd == 'runtests') {
@@ -22,8 +28,12 @@ function getUserInput(question) {
             getUserInput('That was fun. Now what?\n');
         } else if(availableCmds.includes(cmd)) {
             console.log('Processing command...');
-            var result = await bot[cmd]();
-            console.log(result.body);
+            try {
+                var result = await bot[cmd](cmdList[1],cmdList[2]);
+                console.log(result);
+            } catch(error) {
+                console.log(error);
+            }
             getUserInput('That was fun. Now what?\n');
         } else {
             console.log('Please try a valid command');
@@ -38,16 +48,16 @@ async function tests() {
     console.log('Running tests...');
 
     var healthcheck = await bot.healthcheck();
-    console.log(healthcheck.body);
+    console.log(healthcheck);
 
     var sessioninfo = await bot.sessioninfo();
-    console.log(sessioninfo.body);
+    console.log(sessioninfo);
 
     var echo = await bot.echo('hello');
-    console.log(echo.body);
+    console.log(echo);
 
     var userstreams = await bot.userstreams();
-    console.log(userstreams.body);
+    console.log(userstreams);
 
     console.log('finished.');
 }
